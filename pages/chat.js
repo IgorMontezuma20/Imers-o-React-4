@@ -166,9 +166,17 @@ export default function ChatPage() {
                         <Button
                             onClick={() => handleNewMessage(message)}
                             label='Enviar'
-                            fullWidth
                             styleSheet={{
-                                maxWidth: '100px',
+                                borderRadius: '50%',
+                                padding: '0 3px 0 0',
+                                minWidth: '50px',
+                                minHeight: '50px',
+                                fontSize: '20px',
+                                marginBottom: '8px',
+                                lineHeight: '0',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
                             }}
                             buttonColors={{
                                 contrastColor: appConfig.theme.colors.neutrals["000"],
