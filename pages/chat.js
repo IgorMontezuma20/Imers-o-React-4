@@ -1,16 +1,34 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React, { useState } from 'react';
 import appConfig from '../config.json';
+import { useRouter} from 'next/router'
 import { createClient } from '@supabase/supabase-js'
+import { ButtonSendSticker } from '../src/components/ButtonSendSticker'
 
 const SUPABASE_ANON_KEY ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzI4OTcyOSwiZXhwIjoxOTU4ODY1NzI5fQ.yGnmumxnRpHpRfJm7uapCerXvNxaUuPNlIe0_O7yusE'
 const SUPABASE_URL = 'https://vjtbcyufrygdlrrkjhst.supabase.co'
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+function realTimeMessages(addMessage){
+    return supabaseClient
+        .from('messages')
+        .on('INSERT', ({ respostaLive }) => {
+           addMessage(respostaLive.new)
+        })
+        .subscribe()
+}
 
 export default function ChatPage() {
+    const roteamento = useRouter()
+    const usuarioLogado = roteamento.query.username
     const [message, setMessage] = useState('')
-    const [messageList, setMessageList] = useState([])
+    const [messageList, setMessageList] = useState([
+      //  {
+        //   id: 1,
+        //   from: 'IgorMontezuma20',
+       //     text: ':sticker: URL_da_imagem'
+       // }
+    ])
 
     React.useEffect( () => {
         supabaseClient
@@ -21,6 +39,14 @@ export default function ChatPage() {
                 console.log('Dados da consulta: ', data)
                 setMessageList(data)
             })
+        realTimeMessages((newMessage) =>{
+            setMessageList(() => {
+                return [
+                    newMessage,
+                   ...messageList,
+               ]
+            }) 
+        })
     }, [])
     
 
@@ -28,7 +54,7 @@ export default function ChatPage() {
         const message = {
            //id: messageList.length + 1,
             text: newMessage,
-            user: 'IgorMontezuma20',
+            user: usuarioLogado,
         }
 
         supabaseClient
@@ -37,12 +63,8 @@ export default function ChatPage() {
                 message
             ])
             .then( ({ data }) => {
-                    console.log('Criando mensagem: ', data)
-                  setMessageList([
-                    data[0],
-                    ...messageList,
-                 ]) 
-            })
+                   console.log('Criando mensagem: ', data)
+           })
         setMessage('')
     }
 
@@ -153,6 +175,12 @@ export default function ChatPage() {
                                 mainColor: appConfig.theme.colors.primary[500],
                                 mainColorLight: appConfig.theme.colors.primary[400],
                                 mainColorStrong: appConfig.theme.colors.primary[900],
+                            }}
+                        />
+                        <ButtonSendSticker 
+                            onStickerClick={(sticker) => {
+                                console.log('[USANDO O COMPONENTE] Salva esse sticker no banco.')
+                                handleNewMessage(':sticker:'+ sticker)
                             }}
                         />
                     </Box>
@@ -266,7 +294,13 @@ function MessageList(props) {
                                 X
                             </Text>
                         </Box>
-                        {messageItem.text}
+                         {/*Condicional: {messageItem.text.startsWith(':sticker:').toString()}*/}
+
+                         {messageItem.text.startsWith(':sticker:') ? (
+                            <Image src={messageItem.text.replace(':sticker:', '')}/>
+                        ) : (
+                            messageItem.text
+                        )}
                     </Text>
 
                 )
